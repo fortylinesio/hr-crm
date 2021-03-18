@@ -1,4 +1,4 @@
-package com.example.entity;
+package io.fortylines.hrcrm.entity;
 
 import org.springframework.security.core.GrantedAuthority;
 

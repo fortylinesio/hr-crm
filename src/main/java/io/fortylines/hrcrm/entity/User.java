@@ -1,4 +1,4 @@
-package com.example.entity;
+package io.fortylines.hrcrm.entity;
 
 import com.sun.istack.NotNull;
 import org.springframework.security.core.GrantedAuthority;
@@ -121,5 +121,4 @@ public class User implements UserDetails {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
-
 }

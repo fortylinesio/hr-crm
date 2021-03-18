@@ -1,4 +1,4 @@
-package com.example.entity;
+package io.fortylines.hrcrm.entity;
 
 import com.sun.istack.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;

@@ -1,7 +1,5 @@
-package com.example;
+package io.fortylines.hrcrm;
 
-import com.example.entity.User;
-import com.example.entity.Vacancy;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
