@@ -47,9 +47,9 @@ public class Vacancy {
         this.description = description;
     }
 
-    public String getAuthorName() {
-        return author != null ? author.getLastName() + author.getFirstName() : "<none>";
-    }
+//    public String getAuthorName() {
+//        return author != null ? author.getLastName() + author.getFirstName() : "<none>";
+//    }
 
     public Long getId() {
         return id;
