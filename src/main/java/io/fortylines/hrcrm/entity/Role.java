@@ -2,8 +2,9 @@ package io.fortylines.hrcrm.entity;
 
 import org.springframework.security.core.GrantedAuthority;
 
+
 public enum Role implements GrantedAuthority {
-    HR, HeadOfDepartment, ADMIN;
+    HR, HEADOFDEPARTMENT, ADMIN;
 
     @Override
     public String getAuthority() {

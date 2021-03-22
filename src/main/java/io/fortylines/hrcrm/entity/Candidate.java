@@ -1,11 +1,13 @@
 package io.fortylines.hrcrm.entity;
 
 import com.sun.istack.NotNull;
+import lombok.Data;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
 
+@Data
 @Entity
 @Table(name = "candidate")
 public class Candidate {
@@ -46,84 +48,4 @@ public class Candidate {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vacancy_id")
     private Vacancy vacancy;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public String getDiscord() {
-        return discord;
-    }
-
-    public void setDiscord(String discord) {
-        this.discord = discord;
-    }
-
-    public String getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(String department) {
-        this.department = department;
-    }
-
-    public String getYearsOfExperience() {
-        return yearsOfExperience;
-    }
-
-    public void setYearsOfExperience(String yearsOfExperience) {
-        this.yearsOfExperience = yearsOfExperience;
-    }
-
-    public String getDegree() {
-        return degree;
-    }
-
-    public void setDegree(String degree) {
-        this.degree = degree;
-    }
-
-    public Vacancy getVacancy() {
-        return vacancy;
-    }
-
-    public void setVacancy(Vacancy vacancy) {
-        this.vacancy = vacancy;
-    }
 }
