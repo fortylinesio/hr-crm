@@ -3,6 +3,7 @@ package io.fortylines.hrcrm.mapper.Impl;
 import io.fortylines.hrcrm.dto.ReadUserDto;
 import io.fortylines.hrcrm.entity.User;
 import io.fortylines.hrcrm.mapper.UserMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,5 +19,10 @@ public class UserMapperImpl implements UserMapper {
         userDto.setUsername(user.getUsername());
 
         return userDto;
+    }
+
+    @Override
+    public Page<ReadUserDto> toReadUserDtoList(Page<User> users) {
+        return users.map(this::toReadUserDto);
     }
 }
