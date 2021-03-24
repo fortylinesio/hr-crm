@@ -5,6 +5,10 @@ import io.fortylines.hrcrm.dto.ReadUserDto;
 import io.fortylines.hrcrm.dto.UpdateUserDto;
 import io.fortylines.hrcrm.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,5 +38,11 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         userService.delete(id);
+    }
+
+    @GetMapping
+    public Page<ReadUserDto> getAll(@PageableDefault(sort = {"id"}, direction = Sort.Direction.ASC,size = 15)
+                                                Pageable pageable) {
+        return userService.findAll(pageable);
     }
 }

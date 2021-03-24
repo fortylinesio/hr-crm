@@ -9,14 +9,13 @@ import io.fortylines.hrcrm.mapper.UserMapper;
 import io.fortylines.hrcrm.repository.UserRepository;
 import io.fortylines.hrcrm.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -77,9 +76,7 @@ public class UserServiceImpl implements UserService {
 
         user.setFirstName(updateUserDto.getFirstName());
         user.setLastName(updateUserDto.getLastName());
-        user.setUsername(updateUserDto.getUsername());
         user.setPassword(updateUserDto.getPassword());
-        user.setUsername(updateUserDto.getUsername());
 
         if (deactivate.equalsIgnoreCase("true") || deactivate.equalsIgnoreCase("false"))
             user.setActive(Boolean.parseBoolean(deactivate));
@@ -97,6 +94,11 @@ public class UserServiceImpl implements UserService {
 
         User updateUser = userRepository.save(user);
         return userMapper.toReadUserDto(updateUser);
+    }
+
+    @Override
+    public Page<ReadUserDto> findAll(Pageable pageable) {
+        return userMapper.toReadUserDtoList(userRepository.findAll(pageable));
     }
 
     @Override
