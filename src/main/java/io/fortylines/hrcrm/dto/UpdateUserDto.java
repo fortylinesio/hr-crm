@@ -19,5 +19,5 @@ public class UpdateUserDto {
     private boolean active;
 
     @NotNull
-    private String roles;
+    private Long roles;
 }

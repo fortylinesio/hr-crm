@@ -15,9 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 @Service
 public class DefaultUserDtoService implements UserDtoService {
@@ -38,7 +35,7 @@ public class DefaultUserDtoService implements UserDtoService {
         int year = LocalDate.now().getYear();
         String username = ((createUserDto.getFirstName().substring(0, 3) + createUserDto.getLastName().substring(0, 3))
                 + year).toLowerCase();
-        String role = createUserDto.getRoles().toUpperCase();
+        Long role = createUserDto.getRoles();
         String password = passwordEncoder.encode(createUserDto.getPassword());
 
         User createUser = new User();
@@ -46,13 +43,8 @@ public class DefaultUserDtoService implements UserDtoService {
         createUser.setLastName(createUserDto.getLastName());
         createUser.setPassword(password);
         createUser.setUsername(username.replaceAll("\\s+",""));
+        createUser.setRoles(new Role(role));
         createUser.setActive(true);
-
-        if (role.equalsIgnoreCase("HR") || role.equalsIgnoreCase("HEADOFDEPARTMENT")
-                || role.equalsIgnoreCase("ADMIN")) {
-            createUser.setRoles(Collections.singleton(Role.valueOf(role)));
-        } else
-            throw new IllegalArgumentException("Role not found");
 
         User responseUser = userService.create(createUser);
         return userMapper.toReadUserDto(responseUser);
@@ -62,21 +54,14 @@ public class DefaultUserDtoService implements UserDtoService {
     public ReadUserDto update(Long id, UpdateUserDto updateUserDto) {
         User updateUser = new User();
         boolean active = updateUserDto.isActive();
-        String role = updateUserDto.getRoles().toUpperCase();
-        Set<Role> newRole = new HashSet<>();
+        Long role = updateUserDto.getRoles();
         String newPassword = passwordEncoder.encode(updateUserDto.getPassword());
 
         updateUser.setFirstName(updateUserDto.getFirstName());
         updateUser.setLastName(updateUserDto.getLastName());
         updateUser.setPassword(newPassword);
         updateUser.setActive(active);
-
-        if (role.equalsIgnoreCase("HR") || role.equalsIgnoreCase("ADMIN")
-                || role.equalsIgnoreCase("HEADOFDEPARTMENT")) {
-            newRole.add(Role.valueOf(role));
-            updateUser.setRoles(newRole);
-        } else
-            throw new IllegalArgumentException("Role not found");
+        updateUser.setRoles(new Role(role));
 
         User userResponse = userService.update(id, updateUser);
         return userMapper.toReadUserDto(userResponse);

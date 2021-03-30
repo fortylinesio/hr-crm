@@ -7,7 +7,6 @@ import io.fortylines.hrcrm.dtoService.VacancyDtoService;
 import io.fortylines.hrcrm.entity.User;
 import io.fortylines.hrcrm.entity.Vacancy;
 import io.fortylines.hrcrm.mapper.VacancyMapper;
-import io.fortylines.hrcrm.repository.UserRepository;
 import io.fortylines.hrcrm.service.UserService;
 import io.fortylines.hrcrm.service.VacancyService;
 import org.springframework.beans.factory.annotation.Autowired;
