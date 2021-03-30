@@ -10,5 +10,5 @@ public class ReadUserDto {
     private String lastName;
     private String username;
     private Boolean active;
-    private Role roles;
+    private Role role;
 }

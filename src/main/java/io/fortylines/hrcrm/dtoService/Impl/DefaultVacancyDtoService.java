@@ -40,8 +40,7 @@ public class DefaultVacancyDtoService implements VacancyDtoService {
     @Override
     public ReadVacancyDto create(CreateVacancyDto createVacancyDto) {
         Vacancy newVacancy = new Vacancy();
-        Long userId = createVacancyDto.getUserId().getId();
-        User author = userService.getById(userId);
+        User author = userService.getById(createVacancyDto.getUserId());
 
         newVacancy.setTitle(createVacancyDto.getTitle());
         newVacancy.setDescription(createVacancyDto.getDescription());
