@@ -1,6 +1,7 @@
 package io.fortylines.hrcrm.dto;
 
 import io.fortylines.hrcrm.entity.Competencies;
+import io.fortylines.hrcrm.entity.User;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -20,4 +21,6 @@ public class CreateVacancyDto {
 
     @NotNull
     private List<Competencies> competencies;
+
+    private User userId;
 }

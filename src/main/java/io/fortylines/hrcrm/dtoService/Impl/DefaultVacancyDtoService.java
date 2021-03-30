@@ -7,6 +7,7 @@ import io.fortylines.hrcrm.dtoService.VacancyDtoService;
 import io.fortylines.hrcrm.entity.User;
 import io.fortylines.hrcrm.entity.Vacancy;
 import io.fortylines.hrcrm.mapper.VacancyMapper;
+import io.fortylines.hrcrm.repository.UserRepository;
 import io.fortylines.hrcrm.service.UserService;
 import io.fortylines.hrcrm.service.VacancyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +39,10 @@ public class DefaultVacancyDtoService implements VacancyDtoService {
     }
 
     @Override
-    public ReadVacancyDto create(Long user_id, CreateVacancyDto createVacancyDto) {
+    public ReadVacancyDto create(CreateVacancyDto createVacancyDto) {
         Vacancy newVacancy = new Vacancy();
-        User author = userService.getById(user_id);
+        Long userId = createVacancyDto.getUserId().getId();
+        User author = userService.getById(userId);
 
         newVacancy.setTitle(createVacancyDto.getTitle());
         newVacancy.setDescription(createVacancyDto.getDescription());

@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,7 +35,9 @@ public class DefaultUserDtoService implements UserDtoService {
 
     @Override
     public ReadUserDto create(CreateUserDto createUserDto) {
-        String username = (createUserDto.getFirstName() + createUserDto.getLastName()).toLowerCase();
+        int year = LocalDate.now().getYear();
+        String username = ((createUserDto.getFirstName().substring(0, 3) + createUserDto.getLastName().substring(0, 3))
+                + year).toLowerCase();
         String role = createUserDto.getRoles().toUpperCase();
         String password = passwordEncoder.encode(createUserDto.getPassword());
 
@@ -66,11 +69,7 @@ public class DefaultUserDtoService implements UserDtoService {
         updateUser.setFirstName(updateUserDto.getFirstName());
         updateUser.setLastName(updateUserDto.getLastName());
         updateUser.setPassword(newPassword);
-
-        if (active)
-            updateUser.setActive(true);
-        else
-            updateUser.setActive(false);
+        updateUser.setActive(active);
 
         if (role.equalsIgnoreCase("HR") || role.equalsIgnoreCase("ADMIN")
                 || role.equalsIgnoreCase("HEADOFDEPARTMENT")) {
