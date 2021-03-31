@@ -50,8 +50,8 @@ public class DefaultUserDtoService implements UserDtoService {
         createUser.setRoles(role);
         createUser.setActive(true);
 
-        User responseUser = userService.create(createUser);
-        return userMapper.toReadUserDto(responseUser);
+        User user = userService.create(createUser);
+        return userMapper.toReadUserDto(user);
     }
 
     @Override
@@ -65,14 +65,14 @@ public class DefaultUserDtoService implements UserDtoService {
         updateUser.setActive(active);
         updateUser.setRoles(role);
 
-        User userResponse = userService.update(id, updateUser);
-        return userMapper.toReadUserDto(userResponse);
+        User user = userService.update(id, updateUser);
+        return userMapper.toReadUserDto(user);
     }
 
     @Override
     public ReadUserDto getById(Long id) {
-        User userResponse = userService.getById(id);
-        return userMapper.toReadUserDto(userResponse);
+        User user = userService.getById(id);
+        return userMapper.toReadUserDto(user);
     }
 
     @Override

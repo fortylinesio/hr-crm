@@ -13,5 +13,5 @@ public class ReadVacancyDto {
     private String requirements;
     private List<Competencies> competencies;
     private LocalDateTime createdAt;
-    private String author;
+    private String  author;
 }
