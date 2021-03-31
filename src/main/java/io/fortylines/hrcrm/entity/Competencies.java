@@ -1,6 +1,9 @@
 package io.fortylines.hrcrm.entity;
 
 public enum Competencies {
+    JAVA, PYTHON, JAVASCRIPT, PHP;
 
-    Java, Python, JavaScript, PHP;
+    public String toString() {
+        return name();
+    }
 }
