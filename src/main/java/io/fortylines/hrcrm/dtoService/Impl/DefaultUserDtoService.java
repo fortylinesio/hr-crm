@@ -47,7 +47,7 @@ public class DefaultUserDtoService implements UserDtoService {
         createUser.setLastName(createUserDto.getLastName());
         createUser.setPassword(password);
         createUser.setUsername(username);
-        createUser.setRoles(role);
+        createUser.setRole(role);
         createUser.setActive(true);
 
         User user = userService.create(createUser);
@@ -57,13 +57,13 @@ public class DefaultUserDtoService implements UserDtoService {
     @Override
     public ReadUserDto update(Long id, UpdateUserDto updateUserDto) {
         User updateUser = new User();
-        boolean active = updateUserDto.isActive();
+        Boolean active = updateUserDto.getIsActive();
         Role role = roleService.getById(updateUserDto.getRoleId());
 
         updateUser.setFirstName(updateUserDto.getFirstName());
         updateUser.setLastName(updateUserDto.getLastName());
         updateUser.setActive(active);
-        updateUser.setRoles(role);
+        updateUser.setRole(role);
 
         User user = userService.update(id, updateUser);
         return userMapper.toReadUserDto(user);
