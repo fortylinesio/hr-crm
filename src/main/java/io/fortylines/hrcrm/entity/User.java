@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.util.Collection;
-import java.util.Set;
+import java.util.Collections;
 
 @Data
 @Entity
@@ -30,20 +30,15 @@ public class User implements UserDetails {
     @Column(unique = true)
     private String username;
 
-    private boolean active;
+    private boolean isActive;
 
-    @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
-    @Enumerated(EnumType.STRING)
-    private Set<Role> roles;
-
-    public boolean isAdmin() {
-        return roles.contains(Role.ADMIN);
-    }
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private Role role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return Collections.singleton(role);
     }
 
     @Override
@@ -58,22 +53,21 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return isActive;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return isActive;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return isActive;
     }
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return isActive();
     }
-
 }

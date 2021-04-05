@@ -7,15 +7,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserMapperImpl implements UserMapper {
+public class DefaultUserMapper implements UserMapper {
 
     @Override
     public ReadUserDto toReadUserDto(User user) {
         ReadUserDto userDto = new ReadUserDto();
         userDto.setFirstName(user.getFirstName());
         userDto.setLastName(user.getLastName());
-        userDto.setActive(user.isActive());
-        userDto.setRoles(user.getRoles());
+        userDto.setIsActive(user.isActive());
+        userDto.setRole(user.getRole());
         userDto.setUsername(user.getUsername());
 
         return userDto;
