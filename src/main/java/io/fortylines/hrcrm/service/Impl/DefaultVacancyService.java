@@ -47,6 +47,11 @@ public class DefaultVacancyService implements VacancyService {
         updateVacancy.setRequirements(vacancy.getRequirements());
         updateVacancy.setUpdatedAt(vacancy.getUpdatedAt());
         updateVacancy.setCompetencies(vacancy.getCompetencies());
+        updateVacancy.setOnInstagram(vacancy.isOnInstagram());
+        updateVacancy.setOnTelegram(vacancy.isOnTelegram());
+        updateVacancy.setOnJobkg(vacancy.isOnJobkg());
+        updateVacancy.setOnFacebook(vacancy.isOnFacebook());
+        updateVacancy.setOnDiesel(vacancy.isOnDiesel());
 
         return vacancyRepository.save(updateVacancy);
     }

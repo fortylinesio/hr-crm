@@ -29,14 +29,15 @@ CREATE TABLE vacancies
 CREATE TABLE candidates
 (
     id BIGSERIAL PRIMARY KEY NOT NULL,
+    first_name varchar(255),
+    last_name varchar(255),
+    phone_number varchar(255),
     degree varchar(255),
     department varchar(255),
     discord varchar(255),
     email varchar(255),
-    first_name varchar(255),
-    last_name varchar(255),
-    phone_number varchar(255),
     years_of_experience varchar(255),
+    file_name varchar(255),
     vacancy_id BIGINT REFERENCES vacancies (vacancy_id)
 );
 
