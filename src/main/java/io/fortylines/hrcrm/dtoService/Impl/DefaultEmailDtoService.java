@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import javax.mail.*;
 import javax.mail.internet.*;
+import javax.mail.search.FlagTerm;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +25,102 @@ public class DefaultEmailDtoService implements EmailDtoService {
     private String username;
     @Value("${spring.mail.password}")
     private String password;
+    @Value("${attachment.upload.dir}")
+    private String FILE_DIRECTORY;
+
+    private Properties setProperties() {
+        Properties properties = new Properties();
+        properties.setProperty("mail.imap.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        return properties;
+    }
+
+    @Override
+    public List<ReadEmailDto> getUnreadMessages() throws IOException, MessagingException {
+        Properties properties = setProperties();
+        Session session = Session.getDefaultInstance(properties);
+        Store store = null;
+        try {
+            store = session.getStore("imap");
+            store.connect(host, port, username, password);
+            Folder inbox = null;
+            try {
+                inbox = store.getFolder("INBOX");
+                inbox.open(Folder.READ_WRITE);
+
+                FlagTerm flag = new FlagTerm(new Flags(Flags.Flag.SEEN), false);
+                Message[] unreadMessage = inbox.search(flag);
+                inbox.setFlags(unreadMessage, new Flags(Flags.Flag.SEEN), true);
+
+                return readMessages(unreadMessage);
+            } finally {
+                if (inbox != null) {
+                    inbox.close();
+                }
+            }
+        } finally {
+            if (store != null) {
+                store.close();
+            }
+        }
+    }
+
+    @Override
+    public List<ReadEmailDto> getAllMessages() throws MessagingException, IOException {
+        Properties properties = setProperties();
+        Session session = Session.getDefaultInstance(properties);
+        Store store = null;
+        try {
+            store = session.getStore("imap");
+            store.connect(host, port, username, password);
+            Folder inbox = null;
+            try {
+                inbox = store.getFolder("INBOX");
+                inbox.open(Folder.READ_ONLY);
+                Message[] messages = inbox.getMessages();
+
+                return readMessages(messages);
+            } finally {
+                if (inbox != null) {
+                    inbox.close();
+                }
+            }
+        } finally {
+            if (store != null) {
+                store.close();
+            }
+        }
+    }
+
+    private List<ReadEmailDto> readMessages(Message[] messages) throws MessagingException, IOException {
+        List<ReadEmailDto> emailDtoList = new ArrayList<>();
+        for (Message message : messages) {
+            ReadEmailDto readEmailDto = new ReadEmailDto();
+            if (hasAttachments(message)) {
+                Multipart multipart = (Multipart) message.getContent();
+                int partCount = multipart.getCount();
+                for (int i = 0; i < partCount; i++) {
+                    MimeBodyPart part = (MimeBodyPart) multipart.getBodyPart(i);
+                    if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
+                        String decoded = MimeUtility.decodeText(part.getFileName());
+                        String fileName = message.getReceivedDate().toString().replaceAll(
+                                "[ ]|[:]", "_") + "_" + decoded;
+                        part.saveFile(FILE_DIRECTORY + fileName);
+                        readEmailDto.setFileName(fileName);
+                        readEmailDto.setSize(part.getSize());
+                    }
+                }
+            }
+            Address[] froms = message.getFrom();
+            String email = froms == null ? null : ((InternetAddress) froms[0]).getAddress();
+            readEmailDto.setFrom(email);
+            readEmailDto.setMsgId((long) message.getMessageNumber());
+            readEmailDto.setSubject(message.getSubject());
+            readEmailDto.setText(getTextFromMessage(message));
+            readEmailDto.setReceivedAt(message.getReceivedDate());
+            emailDtoList.add(readEmailDto);
+        }
+        return emailDtoList;
+    }
 
     @Override
     public void sendMessage(String to, String subject, String text) throws MessagingException {
@@ -48,56 +146,34 @@ public class DefaultEmailDtoService implements EmailDtoService {
     }
 
     @Override
-    public List<ReadEmailDto> getMails() throws MessagingException, IOException {
-        Properties properties = new Properties();
-        properties.setProperty("mail.imap.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+    public void delete(Integer id, String fileName) throws MessagingException {
+        Properties properties = setProperties();
         Session session = Session.getDefaultInstance(properties);
-        Store store = null;
-        try {
-            store = session.getStore("imap");
-            store.connect(host, port, username, password);
-            Folder inbox = null;
-            try {
-                inbox = store.getFolder("INBOX");
-                inbox.open(Folder.READ_ONLY);
-                Message[] messages = inbox.getMessages();
+        Store store = session.getStore("imap");
+        store.connect(host, port, username, password);
 
-                return readMessages(messages);
-            } finally {
-                if (inbox != null) {
-                    inbox.close(false);
-                }
-            }
-        } finally {
-            if (store != null) {
-                store.close();
-            }
+        Folder inbox = store.getFolder("INBOX");
+        inbox.open(Folder.READ_WRITE);
+        Message message = inbox.getMessage(id);
+        try {
+            message.setFlag(Flags.Flag.DELETED, true);
+            findFileAndDelete(fileName, new File(FILE_DIRECTORY));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    private List<ReadEmailDto> readMessages(Message[] messages) throws MessagingException, IOException {
-        List<ReadEmailDto> emailDtoList = new ArrayList<>();
-        for (Message message : messages) {
-            ReadEmailDto readEmailDto = new ReadEmailDto();
-            if (hasAttachments(message)) {
-                Multipart multipart = (Multipart) message.getContent();
-                int partCount = multipart.getCount();
-                for (int i = 0; i < partCount; i++) {
-                    MimeBodyPart part = (MimeBodyPart) multipart.getBodyPart(i);
-                    readEmailDto.setFileName(part.getFileName());
-                    readEmailDto.setSize(part.getSize());
+    private void findFileAndDelete(String fileName, File file) {
+        File[] files = file.listFiles();
+        if (files != null) {
+            for (File tempFile : files) {
+                if (tempFile.isDirectory()) {
+                    findFileAndDelete(fileName, file);
+                } else if (fileName.equalsIgnoreCase(tempFile.getName())) {
+                    tempFile.delete();
                 }
             }
-            Address[] froms = message.getFrom();
-            String email = froms == null ? null : ((InternetAddress) froms[0]).getAddress();
-            readEmailDto.setFrom(email);
-            readEmailDto.setMsgId((long) message.getMessageNumber());
-            readEmailDto.setSubject(message.getSubject());
-            readEmailDto.setText(getTextFromMessage(message));
-            readEmailDto.setReceivedAt(message.getReceivedDate());
-            emailDtoList.add(readEmailDto);
         }
-        return emailDtoList;
     }
 
     private boolean hasAttachments(Message msg) throws MessagingException, IOException {

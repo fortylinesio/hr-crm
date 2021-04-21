@@ -23,14 +23,24 @@ public class EmailController {
     }
 
     @GetMapping
-    public List<ReadEmailDto> getMails() throws MessagingException, IOException {
-        return emailDtoService.getMails();
+    public List<ReadEmailDto> getAllMessages() throws MessagingException, IOException {
+        return emailDtoService.getAllMessages();
+    }
+
+    @GetMapping("/unread-messages")
+    public List<ReadEmailDto> getUnreadMessages() throws IOException, MessagingException {
+        return emailDtoService.getUnreadMessages();
+    }
+
+    @DeleteMapping("/delete")
+    public void delete(@RequestParam Integer id, @RequestParam String fileName) throws MessagingException {
+        emailDtoService.delete(id, fileName);
     }
 
     @PostMapping("/send-email")
-    public void sendEmail(@RequestParam String to,
-                          @RequestParam String subject,
-                          @RequestParam String text) throws MessagingException {
+    public void sendMessage(@RequestParam String to,
+                            @RequestParam String subject,
+                            @RequestParam String text) throws MessagingException {
         emailDtoService.sendMessage(to, subject, text);
     }
 }

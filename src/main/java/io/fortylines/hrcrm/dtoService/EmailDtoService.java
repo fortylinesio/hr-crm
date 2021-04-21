@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.List;
 
 public interface EmailDtoService {
-    List<ReadEmailDto> getMails() throws MessagingException, IOException;
+    List<ReadEmailDto> getAllMessages() throws MessagingException, IOException;
+    List<ReadEmailDto> getUnreadMessages() throws IOException, MessagingException;
     void sendMessage(String to, String subject, String text) throws MessagingException;
+    void delete(Integer id, String fileName) throws MessagingException;
 }
