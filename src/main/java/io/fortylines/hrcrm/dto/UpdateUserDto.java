@@ -13,6 +13,9 @@ public class UpdateUserDto {
     @NotNull
     private String lastName;
 
+    @NotNull
+    private String email;
+
     private Boolean isActive;
 
     @NotNull

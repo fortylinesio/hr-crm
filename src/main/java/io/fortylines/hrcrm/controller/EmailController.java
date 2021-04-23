@@ -37,10 +37,17 @@ public class EmailController {
         emailDtoService.delete(id, fileName);
     }
 
+    @PostMapping("/mail-sending")
+    public void mailSending(@RequestParam String subject,
+                            @RequestParam String text,
+                            @RequestParam Long roleId) throws MessagingException {
+        emailDtoService.mailSending(subject, text, roleId);
+    }
+
     @PostMapping("/send-email")
-    public void sendMessage(@RequestParam String to,
+    public void sendMessage(@RequestParam String toAddress,
                             @RequestParam String subject,
                             @RequestParam String text) throws MessagingException {
-        emailDtoService.sendMessage(to, subject, text);
+        emailDtoService.sendMessage(toAddress, subject, text);
     }
 }

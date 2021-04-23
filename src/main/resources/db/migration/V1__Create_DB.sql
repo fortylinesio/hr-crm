@@ -10,6 +10,7 @@ CREATE TABLE users
     is_active boolean NOT NULL,
     first_name varchar(255),
     last_name varchar(255),
+    email varchar(255),
     password varchar(255),
     username varchar(255) UNIQUE,
     role_id BIGINT REFERENCES user_role (id)
@@ -45,4 +46,14 @@ CREATE TABLE vacancy_competencies
 (
     vacancy_id BIGINT REFERENCES vacancies (vacancy_id),
     competencies varchar(255)
+);
+
+CREATE TABLE feedback
+(
+  id BIGSERIAL PRIMARY KEY NOT NULL,
+  strengths varchar(255),
+  weaknesses varchar(255),
+  comments varchar(255),
+  rating_scale INTEGER,
+  candidate_id BIGINT REFERENCES candidates (id)
 );

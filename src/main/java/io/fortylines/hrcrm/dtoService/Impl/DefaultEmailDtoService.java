@@ -2,6 +2,8 @@ package io.fortylines.hrcrm.dtoService.Impl;
 
 import io.fortylines.hrcrm.dto.ReadEmailDto;
 import io.fortylines.hrcrm.dtoService.EmailDtoService;
+import io.fortylines.hrcrm.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -28,9 +30,25 @@ public class DefaultEmailDtoService implements EmailDtoService {
     @Value("${attachment.upload.dir}")
     private String FILE_DIRECTORY;
 
+    private final UserService userService;
+
+    @Autowired
+    public DefaultEmailDtoService(UserService userService) {
+        this.userService = userService;
+    }
+
     private Properties setProperties() {
         Properties properties = new Properties();
         properties.setProperty("mail.imap.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        return properties;
+    }
+
+    private Properties setSmtpProperties() {
+        Properties properties = new Properties();
+        properties.put("mail.smtp.host", "smtp.yandex.ru");
+        properties.put("mail.smtp.auth", true);
+        properties.put("mail.smtp.socketFactory.port", "465");
+        properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         return properties;
     }
 
@@ -123,14 +141,37 @@ public class DefaultEmailDtoService implements EmailDtoService {
     }
 
     @Override
-    public void sendMessage(String to, String subject, String text) throws MessagingException {
-        Properties properties = new Properties();
-        properties.put("mail.smtp.host", "smtp.yandex.ru");
-        properties.put("mail.smtp.auth", true);
-        properties.put("mail.smtp.socketFactory.port", "465");
-        properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+    public void mailSending(String subject, String text, Long roleId) throws MessagingException {
+        List<String> emailsList = userService.getAllEmailsByRoleId(roleId);
+        Properties properties = setSmtpProperties();
 
-        Session session = Session.getDefaultInstance(properties,
+        Session session = Session.getInstance(properties,
+                new Authenticator() {
+                    @Override
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(username, password);
+                    }
+                });
+        int size = 0;
+        if (emailsList != null) {
+            size = emailsList.size();
+        }
+        InternetAddress[] addresses = new InternetAddress[size];
+        for (int i = 0; i < size; i++) {
+            addresses[i] = new InternetAddress(emailsList.get(i));
+        }
+        Message message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(username));
+        message.setRecipients(Message.RecipientType.TO, addresses);
+        message.setSubject(subject);
+        message.setText(text);
+        Transport.send(message);
+    }
+
+    @Override
+    public void sendMessage(String toAddress, String subject, String text) throws MessagingException {
+        Properties properties = setSmtpProperties();
+        Session session = Session.getInstance(properties,
                 new Authenticator() {
                     @Override
                     protected PasswordAuthentication getPasswordAuthentication() {
@@ -139,7 +180,7 @@ public class DefaultEmailDtoService implements EmailDtoService {
                 });
         Message message = new MimeMessage(session);
         message.setFrom(new InternetAddress(username));
-        message.setRecipient(Message.RecipientType.TO, new InternetAddress(to));
+        message.setRecipient(Message.RecipientType.TO, new InternetAddress(toAddress));
         message.setSubject(subject);
         message.setText(text);
         Transport.send(message);

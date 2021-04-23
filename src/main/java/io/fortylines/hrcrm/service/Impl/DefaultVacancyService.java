@@ -23,8 +23,7 @@ public class DefaultVacancyService implements VacancyService {
     @Override
     public Vacancy getById(Long id) {
         return vacancyRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(
-                "Vacancy with id: " + id + " not found"
-        ));
+                "Vacancy with id: " + id + " not found"));
     }
 
     @Override
