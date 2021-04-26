@@ -1,5 +1,7 @@
 package io.fortylines.hrcrm.dtoService.Impl;
 
+import io.fortylines.hrcrm.dto.CreateMailDto;
+import io.fortylines.hrcrm.dto.CreateMailSendingDto;
 import io.fortylines.hrcrm.dto.ReadEmailDto;
 import io.fortylines.hrcrm.dtoService.EmailDtoService;
 import io.fortylines.hrcrm.service.UserService;
@@ -20,15 +22,23 @@ import java.util.Properties;
 public class DefaultEmailDtoService implements EmailDtoService {
 
     @Value("${spring.mail.host}")
-    private String host;
+    private String HOST;
     @Value("${spring.mail.port}")
-    private int port;
+    private int PORT;
     @Value("${spring.mail.username}")
-    private String username;
+    private String USERNAME;
     @Value("${spring.mail.password}")
-    private String password;
+    private String PASSWORD;
     @Value("${attachment.upload.dir}")
     private String FILE_DIRECTORY;
+    @Value("${spring.mail.properties.mail.smtp.host}")
+    private String SMTP_HOST;
+    @Value("${spring.mail.properties.mail.smtp.port}")
+    private String SMTP_PORT;
+    @Value("${spring.mail.properties.mail.smtp.auth}")
+    private String AUTH;
+    @Value("${spring.mail.properties.mail.smtp.ssl.enable}")
+    private String SSL;
 
     private final UserService userService;
 
@@ -37,29 +47,29 @@ public class DefaultEmailDtoService implements EmailDtoService {
         this.userService = userService;
     }
 
-    private Properties setProperties() {
+    private Properties getProperties() {
         Properties properties = new Properties();
         properties.setProperty("mail.imap.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         return properties;
     }
 
-    private Properties setSmtpProperties() {
+    private Properties getSmtpProperties() {
         Properties properties = new Properties();
-        properties.put("mail.smtp.host", "smtp.yandex.ru");
-        properties.put("mail.smtp.auth", true);
-        properties.put("mail.smtp.socketFactory.port", "465");
-        properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        properties.put("mail.smtp.host", SMTP_HOST);
+        properties.put("mail.smtp.auth", AUTH);
+        properties.put("mail.smtp.port", SMTP_PORT);
+        properties.put("mail.smtp.ssl.enable", SSL);
         return properties;
     }
 
     @Override
     public List<ReadEmailDto> getUnreadMessages() throws IOException, MessagingException {
-        Properties properties = setProperties();
+        Properties properties = getProperties();
         Session session = Session.getDefaultInstance(properties);
         Store store = null;
         try {
             store = session.getStore("imap");
-            store.connect(host, port, username, password);
+            store.connect(HOST, PORT, USERNAME, PASSWORD);
             Folder inbox = null;
             try {
                 inbox = store.getFolder("INBOX");
@@ -84,12 +94,12 @@ public class DefaultEmailDtoService implements EmailDtoService {
 
     @Override
     public List<ReadEmailDto> getAllMessages() throws MessagingException, IOException {
-        Properties properties = setProperties();
+        Properties properties = getProperties();
         Session session = Session.getDefaultInstance(properties);
         Store store = null;
         try {
             store = session.getStore("imap");
-            store.connect(host, port, username, password);
+            store.connect(HOST, PORT, USERNAME, PASSWORD);
             Folder inbox = null;
             try {
                 inbox = store.getFolder("INBOX");
@@ -141,15 +151,15 @@ public class DefaultEmailDtoService implements EmailDtoService {
     }
 
     @Override
-    public void mailSending(String subject, String text, Long roleId) throws MessagingException {
-        List<String> emailsList = userService.getAllEmailsByRoleId(roleId);
-        Properties properties = setSmtpProperties();
+    public void mailSending(CreateMailSendingDto createMailSendingDto) throws MessagingException {
+        List<String> emailsList = userService.getAllEmailsByRoleId(createMailSendingDto.getRoleId());
+        Properties properties = getSmtpProperties();
 
         Session session = Session.getInstance(properties,
                 new Authenticator() {
                     @Override
                     protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password);
+                        return new PasswordAuthentication(USERNAME, PASSWORD);
                     }
                 });
         int size = 0;
@@ -161,41 +171,42 @@ public class DefaultEmailDtoService implements EmailDtoService {
             addresses[i] = new InternetAddress(emailsList.get(i));
         }
         Message message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(username));
+        message.setFrom(new InternetAddress(USERNAME));
         message.setRecipients(Message.RecipientType.TO, addresses);
-        message.setSubject(subject);
-        message.setText(text);
+        message.setSubject(createMailSendingDto.getSubject());
+        message.setText(createMailSendingDto.getText());
         Transport.send(message);
     }
 
     @Override
-    public void sendMessage(String toAddress, String subject, String text) throws MessagingException {
-        Properties properties = setSmtpProperties();
+    public void sendMessage(CreateMailDto createMailDto) throws MessagingException {
+        Properties properties = getSmtpProperties();
         Session session = Session.getInstance(properties,
                 new Authenticator() {
                     @Override
                     protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password);
+                        return new PasswordAuthentication(USERNAME, PASSWORD);
                     }
                 });
         Message message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(username));
-        message.setRecipient(Message.RecipientType.TO, new InternetAddress(toAddress));
-        message.setSubject(subject);
-        message.setText(text);
+        message.setFrom(new InternetAddress(USERNAME));
+        message.setRecipient(Message.RecipientType.TO, new InternetAddress(createMailDto.getToAddress()));
+        message.setSubject(createMailDto.getSubject());
+        message.setText(createMailDto.getText());
         Transport.send(message);
     }
 
     @Override
-    public void delete(Integer id, String fileName) throws MessagingException {
-        Properties properties = setProperties();
+    public void delete(Long id, String fileName) throws MessagingException {
+        int messageId = (int) (long) id;
+        Properties properties = getProperties();
         Session session = Session.getDefaultInstance(properties);
         Store store = session.getStore("imap");
-        store.connect(host, port, username, password);
+        store.connect(HOST, PORT, USERNAME, PASSWORD);
 
         Folder inbox = store.getFolder("INBOX");
         inbox.open(Folder.READ_WRITE);
-        Message message = inbox.getMessage(id);
+        Message message = inbox.getMessage(Math.toIntExact(messageId));
         try {
             message.setFlag(Flags.Flag.DELETED, true);
             findFileAndDelete(fileName, new File(FILE_DIRECTORY));

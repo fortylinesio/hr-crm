@@ -8,5 +8,6 @@ public interface FeedbackDtoService {
     ReadFeedbackDto create(CreateFeedbackDto createFeedbackDto);
     ReadFeedbackDto getById(Long id);
     ReadFeedbackDto update(Long id, UpdateFeedbackDto updateFeedbackDto);
+    ReadFeedbackDto getFeedbackByCandidateId(Long id);
     void delete(Long id);
 }

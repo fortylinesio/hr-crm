@@ -62,6 +62,12 @@ public class DefaultFeedbackDtoService implements FeedbackDtoService {
     }
 
     @Override
+    public ReadFeedbackDto getFeedbackByCandidateId(Long id) {
+        Feedback feedback = feedbackService.getByCandidateId(id);
+        return feedbackMapper.toReadFeedbackDto(feedback);
+    }
+
+    @Override
     public void delete(Long id) {
         feedbackService.delete(id);
     }

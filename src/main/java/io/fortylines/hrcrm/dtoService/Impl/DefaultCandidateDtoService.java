@@ -39,10 +39,10 @@ public class DefaultCandidateDtoService implements CandidateDtoService {
     }
 
     @Override
-    public ReadCandidateDto create(MultipartFile resume ,CreateCandidateDto createCandidateDto) throws IOException {
+    public ReadCandidateDto create(MultipartFile resume, CreateCandidateDto createCandidateDto) throws IOException {
         Candidate newCandidate = new Candidate();
-        Vacancy vacancyId = vacancyService.getById(createCandidateDto.getVacancyId());
-        String dateNow = LocalDateTime.now().withNano(0).withSecond(0).toString().replaceAll(":","-");
+        Vacancy vacancy = vacancyService.getById(createCandidateDto.getVacancyId());
+        String dateNow = LocalDateTime.now().withNano(0).withSecond(0).toString().replaceAll(":", "-");
         String fileName = dateNow + "_" + resume.getOriginalFilename();
 
         resume.transferTo(new File(FILE_DIRECTORY + fileName));
@@ -55,7 +55,7 @@ public class DefaultCandidateDtoService implements CandidateDtoService {
         newCandidate.setDiscord(createCandidateDto.getDiscord());
         newCandidate.setEmail(createCandidateDto.getEmail());
         newCandidate.setYearsOfExperience(createCandidateDto.getYearsOfExperience());
-        newCandidate.setVacancy(vacancyId);
+        newCandidate.setVacancy(vacancy);
 
         Candidate candidate = candidateService.create(newCandidate);
         return candidateMapper.toReadCandidateDto(candidate);
@@ -65,7 +65,7 @@ public class DefaultCandidateDtoService implements CandidateDtoService {
     public ReadCandidateDto update(Long id, MultipartFile resume,
                                    UpdateCandidateDto updateCandidateDto) throws IOException {
         Candidate updateCandidate = new Candidate();
-        Vacancy vacancyId = vacancyService.getById(updateCandidateDto.getVacancyId());
+        Vacancy vacancy = vacancyService.getById(updateCandidateDto.getVacancyId());
 
         updateCandidate.setFirstName(updateCandidateDto.getFirstName());
         updateCandidate.setLastName(updateCandidateDto.getLastName());
@@ -75,7 +75,7 @@ public class DefaultCandidateDtoService implements CandidateDtoService {
         updateCandidate.setDiscord(updateCandidateDto.getDiscord());
         updateCandidate.setEmail(updateCandidateDto.getEmail());
         updateCandidate.setYearsOfExperience(updateCandidateDto.getYearsOfExperience());
-        updateCandidate.setVacancy(vacancyId);
+        updateCandidate.setVacancy(vacancy);
 
         Candidate candidate = candidateService.update(id, resume, updateCandidate);
         return candidateMapper.toReadCandidateDto(candidate);

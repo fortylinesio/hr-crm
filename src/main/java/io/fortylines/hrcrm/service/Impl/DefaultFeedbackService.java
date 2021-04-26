@@ -30,6 +30,11 @@ public class DefaultFeedbackService implements FeedbackService {
     }
 
     @Override
+    public Feedback getByCandidateId(Long candidateId) {
+        return feedbackRepository.retrieveFeedbackByCandidateId(candidateId);
+    }
+
+    @Override
     public void delete(Long id) {
         feedbackRepository.deleteById(id);
     }
