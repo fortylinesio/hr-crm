@@ -8,6 +8,7 @@ import io.fortylines.hrcrm.entity.Candidate;
 import io.fortylines.hrcrm.entity.Vacancy;
 import io.fortylines.hrcrm.mapper.CandidateMapper;
 import io.fortylines.hrcrm.service.CandidateService;
+import io.fortylines.hrcrm.service.S3FileUploadService;
 import io.fortylines.hrcrm.service.VacancyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
@@ -29,13 +29,15 @@ public class DefaultCandidateDtoService implements CandidateDtoService {
     private final VacancyService vacancyService;
     private final CandidateService candidateService;
     private final CandidateMapper candidateMapper;
+    private final S3FileUploadService s3FileUploadService;
 
     @Autowired
     public DefaultCandidateDtoService(VacancyService vacancyService, CandidateService candidateService,
-                                      CandidateMapper candidateMapper) {
+                                      CandidateMapper candidateMapper, S3FileUploadService s3FileUploadService) {
         this.vacancyService = vacancyService;
         this.candidateService = candidateService;
         this.candidateMapper = candidateMapper;
+        this.s3FileUploadService = s3FileUploadService;
     }
 
     @Override
@@ -44,8 +46,8 @@ public class DefaultCandidateDtoService implements CandidateDtoService {
         Vacancy vacancy = vacancyService.getById(createCandidateDto.getVacancyId());
         String dateNow = LocalDateTime.now().withNano(0).withSecond(0).toString().replaceAll(":", "-");
         String fileName = dateNow + "_" + resume.getOriginalFilename();
+        s3FileUploadService.upload(fileName, resume);
 
-        resume.transferTo(new File(FILE_DIRECTORY + fileName));
         newCandidate.setFileName(fileName);
         newCandidate.setFirstName(createCandidateDto.getFirstName());
         newCandidate.setLastName(createCandidateDto.getLastName());
@@ -94,7 +96,8 @@ public class DefaultCandidateDtoService implements CandidateDtoService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(String fileName, Long id) {
+        s3FileUploadService.deleteFile(fileName);
         candidateService.delete(id);
     }
 }

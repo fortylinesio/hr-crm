@@ -1,13 +1,25 @@
 package io.fortylines.hrcrm.dtoService.Impl;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
+import com.amazonaws.services.simpleemail.model.Body;
+import com.amazonaws.services.simpleemail.model.Content;
+import com.amazonaws.services.simpleemail.model.Destination;
+import com.amazonaws.services.simpleemail.model.SendEmailRequest;
 import io.fortylines.hrcrm.dto.CreateMailDto;
 import io.fortylines.hrcrm.dto.CreateMailSendingDto;
 import io.fortylines.hrcrm.dto.ReadEmailDto;
 import io.fortylines.hrcrm.dtoService.EmailDtoService;
+import io.fortylines.hrcrm.property.AmazonSesProperty;
+import io.fortylines.hrcrm.service.S3FileUploadService;
 import io.fortylines.hrcrm.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ResourceUtils;
 
 import javax.mail.*;
 import javax.mail.internet.*;
@@ -31,34 +43,22 @@ public class DefaultEmailDtoService implements EmailDtoService {
     private String PASSWORD;
     @Value("${attachment.upload.dir}")
     private String FILE_DIRECTORY;
-    @Value("${spring.mail.properties.mail.smtp.host}")
-    private String SMTP_HOST;
-    @Value("${spring.mail.properties.mail.smtp.port}")
-    private String SMTP_PORT;
-    @Value("${spring.mail.properties.mail.smtp.auth}")
-    private String AUTH;
-    @Value("${spring.mail.properties.mail.smtp.ssl.enable}")
-    private String SSL;
 
     private final UserService userService;
+    private final AmazonSesProperty amazonSesProperty;
+    private final S3FileUploadService s3FileUploadService;
 
     @Autowired
-    public DefaultEmailDtoService(UserService userService) {
+    public DefaultEmailDtoService(UserService userService, AmazonSesProperty amazonSesProperty,
+                                  S3FileUploadService s3FileUploadService) {
         this.userService = userService;
+        this.amazonSesProperty = amazonSesProperty;
+        this.s3FileUploadService = s3FileUploadService;
     }
 
     private Properties getProperties() {
         Properties properties = new Properties();
         properties.setProperty("mail.imap.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-        return properties;
-    }
-
-    private Properties getSmtpProperties() {
-        Properties properties = new Properties();
-        properties.put("mail.smtp.host", SMTP_HOST);
-        properties.put("mail.smtp.auth", AUTH);
-        properties.put("mail.smtp.port", SMTP_PORT);
-        properties.put("mail.smtp.ssl.enable", SSL);
         return properties;
     }
 
@@ -133,6 +133,9 @@ public class DefaultEmailDtoService implements EmailDtoService {
                         String fileName = message.getReceivedDate().toString().replaceAll(
                                 "[ ]|[:]", "_") + "_" + decoded;
                         part.saveFile(FILE_DIRECTORY + fileName);
+                        File file = ResourceUtils.getFile(FILE_DIRECTORY + fileName);
+                        s3FileUploadService.uploadFile(fileName, file);
+                        findFileAndDelete(fileName, new File(FILE_DIRECTORY));
                         readEmailDto.setFileName(fileName);
                         readEmailDto.setSize(part.getSize());
                     }
@@ -151,49 +154,45 @@ public class DefaultEmailDtoService implements EmailDtoService {
     }
 
     @Override
-    public void mailSending(CreateMailSendingDto createMailSendingDto) throws MessagingException {
+    public void mailSending(CreateMailSendingDto createMailSendingDto) {
         List<String> emailsList = userService.getAllEmailsByRoleId(createMailSendingDto.getRoleId());
-        Properties properties = getSmtpProperties();
-
-        Session session = Session.getInstance(properties,
-                new Authenticator() {
-                    @Override
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(USERNAME, PASSWORD);
-                    }
-                });
         int size = 0;
         if (emailsList != null) {
             size = emailsList.size();
         }
-        InternetAddress[] addresses = new InternetAddress[size];
+
         for (int i = 0; i < size; i++) {
-            addresses[i] = new InternetAddress(emailsList.get(i));
+            CreateMailDto createMailDto = new CreateMailDto();
+            createMailDto.setToAddress(emailsList.get(i));
+            createMailDto.setSubject(createMailSendingDto.getSubject());
+            createMailDto.setText(createMailSendingDto.getText());
+            sendMessage(createMailDto);
         }
-        Message message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(USERNAME));
-        message.setRecipients(Message.RecipientType.TO, addresses);
-        message.setSubject(createMailSendingDto.getSubject());
-        message.setText(createMailSendingDto.getText());
-        Transport.send(message);
     }
 
     @Override
-    public void sendMessage(CreateMailDto createMailDto) throws MessagingException {
-        Properties properties = getSmtpProperties();
-        Session session = Session.getInstance(properties,
-                new Authenticator() {
-                    @Override
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(USERNAME, PASSWORD);
-                    }
-                });
-        Message message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(USERNAME));
-        message.setRecipient(Message.RecipientType.TO, new InternetAddress(createMailDto.getToAddress()));
-        message.setSubject(createMailDto.getSubject());
-        message.setText(createMailDto.getText());
-        Transport.send(message);
+    public void sendMessage(CreateMailDto createMailDto) {
+        try {
+            BasicAWSCredentials awsCredentials = new BasicAWSCredentials(
+                    amazonSesProperty.getAccessKey(), amazonSesProperty.getSecretKey());
+            AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard()
+                    .withRegion(Regions.EU_CENTRAL_1)
+                    .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+                    .build();
+
+            SendEmailRequest request = new SendEmailRequest()
+                    .withDestination(new Destination().withToAddresses(createMailDto.getToAddress()))
+                    .withMessage(new com.amazonaws.services.simpleemail.model.Message()
+                            .withBody(new Body()
+                                    .withText(new Content()
+                                            .withCharset("UTF-8").withData(createMailDto.getText())))
+                            .withSubject(new Content()
+                                    .withCharset("UTF-8").withData(createMailDto.getSubject())))
+                    .withSource(amazonSesProperty.getMailFrom());
+            client.sendEmail(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

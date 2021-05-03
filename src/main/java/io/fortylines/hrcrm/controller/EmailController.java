@@ -40,12 +40,12 @@ public class EmailController {
     }
 
     @PostMapping("/mail_sending")
-    public void mailSending(@RequestBody CreateMailSendingDto createMailSendingDto) throws MessagingException {
+    public void mailSending(@RequestBody CreateMailSendingDto createMailSendingDto) {
         emailDtoService.mailSending(createMailSendingDto);
     }
 
     @PostMapping("/send_email")
-    public void sendMessage(@RequestBody CreateMailDto createMailDto) throws MessagingException {
+    public void sendMessage(@RequestBody CreateMailDto createMailDto) {
         emailDtoService.sendMessage(createMailDto);
     }
 }

@@ -30,14 +30,14 @@ public class CandidateController {
     public ReadCandidateDto create(@RequestPart(value = "resume") MultipartFile resume,
                                    @RequestPart(value = "create") @Validated
                                            CreateCandidateDto createUserDto) throws IOException {
-        return candidateDtoService.create(resume ,createUserDto);
+        return candidateDtoService.create(resume, createUserDto);
     }
 
     @PutMapping("/{id}")
     public ReadCandidateDto update(@PathVariable Long id,
                                    @RequestPart(value = "resume", required = false) MultipartFile resume,
                                    @RequestPart(value = "update") @Validated
-                                   UpdateCandidateDto updateCandidateDto) throws IOException {
+                                           UpdateCandidateDto updateCandidateDto) throws IOException {
         return candidateDtoService.update(id, resume, updateCandidateDto);
     }
 
@@ -47,8 +47,9 @@ public class CandidateController {
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        candidateDtoService.delete(id);
+    public void delete(@PathVariable Long id,
+                       @RequestParam(value = "fileName") String fileName) {
+        candidateDtoService.delete(fileName, id);
     }
 
     @GetMapping

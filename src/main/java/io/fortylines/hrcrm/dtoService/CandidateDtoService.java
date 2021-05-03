@@ -14,5 +14,5 @@ public interface CandidateDtoService {
     ReadCandidateDto update(Long id, MultipartFile multipartFile, UpdateCandidateDto updateCandidateDto) throws IOException;
     ReadCandidateDto getById(Long id);
     Page<ReadCandidateDto> getAll(Pageable pageable);
-    void delete(Long id);
+    void delete(String fileName, Long id);
 }
